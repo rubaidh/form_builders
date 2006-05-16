@@ -1,4 +1,7 @@
 # Build a form using tables.
+
+require 'rubaidh/form_builder_helper'
+
 module Rubaidh
   module TabularForm
     class TabularFormBuilder < ActionView::Helpers::FormBuilder 
@@ -20,23 +23,6 @@ module Rubaidh
       end
     end 
 
-    def tabular_form_for(object_name, *args, &proc)
-      raise ArgumentError, "Missing block" unless block_given?
-      options = args.last.is_a?(Hash) ? args.pop : {}
-      concat(form_tag(options.delete(:url) || {}, options.delete(:html) || {}), proc.binding)
-      concat("<table>", proc.binding) 
-      fields_for(object_name, *(args << options.merge(:builder => TabularFormBuilder)), &proc)
-      concat("</table>", proc.binding) 
-      concat('</form>', proc.binding)
-    end
-
-    def tabular_remote_form_for(object_name, object, options = {}, &proc)
-      raise ArgumentError, "Missing block" unless block_given?
-      concat(form_remote_tag(options), proc.binding)
-      concat("<table>", proc.binding) 
-      fields_for(object_name, object, options.merge(:builder => TabularFormBuilder), &proc)
-      concat("</table>", proc.binding) 
-      concat('</form>', proc.binding)
-    end
+    create_form_for TabularFormBuilder, :fields_pre => '<table>', :fields_post => '</table>'
   end
 end
