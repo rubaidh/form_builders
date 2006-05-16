@@ -1,12 +1,8 @@
-# Build a form using tables.
-
 require 'rubaidh/form_builder_helper'
 
+# Build a form using tables.
 module Rubaidh
   module TabularForm
-    
-    include Rubaidh::FormBuilderHelper
-    
     class TabularFormBuilder < ActionView::Helpers::FormBuilder 
       (field_helpers - %w(check_box radio_button)).each do |selector| 
         src = <<-END_SRC 
@@ -26,6 +22,20 @@ module Rubaidh
       end
     end 
 
-    create_form_for TabularFormBuilder, :fields_pre => '<table>', :fields_post => '</table>'
+    def tabular_form_for(object_name, *args, &proc)
+      options = args.last.is_a?(Hash) ? args.last : {}
+      custom_form_for(
+        TabularFormBuilder, '<table>', '</table>',
+        form_tag(options.delete(:url) || {}, options.delete(:html) || {}),
+        object_name, *args, &proc)
+    end
+    
+    def tabular_remote_form_for(object_name, *args, &proc)
+      options = args.last.is_a?(Hash) ? args.last : {}
+      custom_form_for(
+        TabularFormBuilder, '<table>', '</table>',
+        form_remote_tag(options),
+        object_name, *args, &proc)
+    end
   end
 end
