@@ -4,6 +4,9 @@ require 'rubaidh/form_builder_helper'
 
 module Rubaidh
   module TabularForm
+    
+    include Rubaidh::FormBuilderHelper
+    
     class TabularFormBuilder < ActionView::Helpers::FormBuilder 
       (field_helpers - %w(check_box radio_button)).each do |selector| 
         src = <<-END_SRC 
