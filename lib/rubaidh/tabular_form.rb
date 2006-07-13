@@ -61,10 +61,8 @@ module Rubaidh
       end
       
       def extract_tabular_options field, options
-        label_text = options[:label] || options["label"] || field.to_s.humanize
-        required = options[:required] || false
-        options.delete :label
-        options.delete :required
+        label_text = options.delete :label || field.to_s.humanize
+        required = options.delete :required || false
         [label_text, required]
       end
     end 
