@@ -7,6 +7,7 @@ module Rubaidh
       (field_helpers - %w(check_box radio_button)).each do |selector| 
         src = <<-END_SRC 
           def #{selector}(field, options = {})
+            field = field.to_s
             label_text, required = extract_tabular_options(field, options)
             generic_field(field, super, label_text)
           end 
@@ -17,6 +18,7 @@ module Rubaidh
       %w(check_box radio_button).each do |selector|
         src = <<-END_SRC
           def #{selector}(field, options = {})
+            field = field.to_s
             label_text, required = extract_tabular_options(field, options)
             generic_field(field, super, label_text, :required => required, :label => :after)
           end
@@ -29,8 +31,16 @@ module Rubaidh
       end
       
       def file_column_field(field, options = {})
+        field = field.to_s
         label_text, required = extract_tabular_options(field, options)
         generic_field(field, @template.file_column_field(@object_name, field, options), label_text, :required => required)
+      end
+      
+      def separator(new_section_name)
+        <<-HTML
+        </table></fieldset>
+        <fieldset><legend>#{new_section_name}</legend><table>
+        HTML
       end
       
       protected
@@ -61,26 +71,39 @@ module Rubaidh
       end
       
       def extract_tabular_options field, options
-        label_text = options.delete :label || field.to_s.humanize
-        required = options.delete :required || false
+        label_text = options.delete(:label) || field.to_s.humanize
+        required = options.delete(:required) || false
         [label_text, required]
       end
     end 
 
     def tabular_form_for(object_name, *args, &proc)
       options = args.last.is_a?(Hash) ? args.last : {}
+      legend = options.delete :legend
+      if legend.blank?
+        prefix = "<table>"
+        postfix = "</table>"
+      else
+        prefix = "<fieldset><legend>#{legend}</legend><table>"
+        postfix = '</table></fieldset>'
+      end
       custom_form_for(
-        TabularFormBuilder, '<table>', '</table>',
+        TabularFormBuilder, prefix, postfix,
         form_tag(options.delete(:url) || {}, options.delete(:html) || {}),
         object_name, *args, &proc)
     end
     
     def tabular_remote_form_for(object_name, *args, &proc)
       options = args.last.is_a?(Hash) ? args.last : {}
-      custom_form_for(
-        TabularFormBuilder, '<table>', '</table>',
-        form_remote_tag(options),
-        object_name, *args, &proc)
+      legend = options.delete :legend
+      if legend.blank?
+        prefix = "<table>"
+        postfix = "</table>"
+      else
+        prefix = "<fieldset><legend>#{legend}</legend><table>"
+        postfix = '</table></fieldset>'
+      end
+      custom_form_for(TabularFormBuilder, prefix, postfix, form_remote_tag(options), object_name, *args, &proc)
     end
   end
 end
