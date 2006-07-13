@@ -7,7 +7,7 @@ module Rubaidh
       (field_helpers - %w(check_box radio_button)).each do |selector| 
         src = <<-END_SRC 
           def #{selector}(field, options = {})
-            label_text = options[:label] || options["label"] || field.to_s.humanize
+            label_text, required = extract_tabular_options(field, options)
             generic_field(field, super, label_text)
           end 
         END_SRC
@@ -17,8 +17,8 @@ module Rubaidh
       %w(check_box radio_button).each do |selector|
         src = <<-END_SRC
           def #{selector}(field, options = {})
-            label_text = options[:label] || options["label"] || field.to_s.humanize
-            generic_field(field, super, label_text, :label => :after)
+            label_text, required = extract_tabular_options(field, options)
+            generic_field(field, super, label_text, :required => required, :label => :after)
           end
         END_SRC
         class_eval src, __FILE__, __LINE__ 
@@ -29,23 +29,24 @@ module Rubaidh
       end
       
       def file_column_field(field, options = {})
-        label_text = options[:label] || options["label"] || field.to_s.humanize
-        generic_field(field, @template.file_column_field(@object_name, field, options), label_text)
+        label_text, required = extract_tabular_options(field, options)
+        generic_field(field, @template.file_column_field(@object_name, field, options), label_text, :required => required)
       end
       
       protected
       def generic_field(fieldname, field, label_text = nil, options = {})
+        required = options[:required] ? td('*', :class => 'requiredField') : td('')
         unless label_text.blank?
           if options[:label] == :after
-            tr(td('') + td(field + label(label_text, "#{@object_name}_#{fieldname}", true)))
+            tr(td('') + td(field + label(label_text, "#{@object_name}_#{fieldname}", true)) + required)
           else
             tr(
               td(label(label_text, "#{@object_name}_#{fieldname}")) +
-              td(field)
+              td(field) + required
             ) 
           end
         else # No label
-          tr(td(field, :colspan => 2, :style => "text-align: right;"))
+          tr(td(field, :colspan => 2, :style => "text-align: right;") + required)
         end
       end
       
@@ -57,6 +58,14 @@ module Rubaidh
       end
       def label text, for_field, after = false
         @template.content_tag 'label', "#{text}#{after ? '' : ':'}", :for => for_field
+      end
+      
+      def extract_tabular_options field, options
+        label_text = options[:label] || options["label"] || field.to_s.humanize
+        required = options[:required] || false
+        options.delete :label
+        options.delete :required
+        [label_text, required]
       end
     end 
 
